@@ -2,6 +2,8 @@
 
 A powerful, client-side web application for batch image optimization and compression. Process multiple images at once with customizable presets, format conversion, and detailed reporting - all running directly in your browser with no server required.
 
+**[🚀 Try it Live](https://crypto69.github.io/web-image-optimizer/web-image-optimizer.html)**
+
 ![Web Image Optimizer UI](images/Web%20image%20optimise.png)
 
 ## Features
