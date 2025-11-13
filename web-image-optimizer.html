@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Image Optimizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 1000px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 40px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .section {
+        margin-bottom: 25px;
+        padding-bottom: 25px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .section:last-of-type {
+        border-bottom: none;
+      }
+
+      .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+      }
+
+      .section-title::before {
+        content: "";
+        width: 4px;
+        height: 16px;
+        background: #667eea;
+        margin-right: 8px;
+        border-radius: 2px;
+      }
+
+      .folder-selector {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      button.secondary {
+        background: #6c757d;
+      }
+
+      button.secondary:hover {
+        background: #5a6268;
+      }
+
+      .folder-info {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #555;
+        margin-top: 10px;
+      }
+
+      .preset-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .preset-btn {
+        padding: 10px;
+        font-size: 13px;
+        background: #f8f9fa;
+        color: #333;
+        border: 2px solid #e0e0e0;
+      }
+
+      .preset-btn:hover {
+        background: #e9ecef;
+        border-color: #667eea;
+        transform: none;
+      }
+
+      .preset-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+      }
+
+      .option-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
+      }
+
+      select,
+      input[type="number"],
+      input[type="text"] {
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+      }
+
+      select:focus,
+      input[type="number"]:focus,
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .checkbox-group label {
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .process-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 16px;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+
+      .process-btn:hover {
+        background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+      }
+
+      .progress-section {
+        margin-top: 25px;
+        display: none;
+      }
+
+      .progress-bar-container {
+        background: #f0f0f0;
+        border-radius: 10px;
+        height: 30px;
+        overflow: hidden;
+        margin-bottom: 10px;
+        position: relative;
+      }
+
+      .progress-bar {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .progress-text {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .report {
+        margin-top: 25px;
+        display: none;
+      }
+
+      .report-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .report-title {
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .report-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        padding: 20px;
+        background: #f8f9fa;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+      }
+
+      .stat-subtitle {
+        font-size: 12px;
+        color: #999;
+        margin-top: 4px;
+      }
+
+      .savings-highlight {
+        color: #28a745;
+      }
+
+      .details-table {
+        margin: 20px;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .details-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .details-body {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .detail-row {
+        display: grid;
+        grid-template-columns: 2fr 0.6fr 1fr 1fr 1fr;
+        padding: 12px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+        align-items: center;
+      }
+
+      .detail-format {
+        font-weight: 600;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+
+      .detail-format.webp {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+
+      .detail-format.jpeg {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+
+      .detail-format.png {
+        background: #f3e5f5;
+        color: #7b1fa2;
+      }
+
+      .detail-row:hover {
+        background: #f8f9fa;
+      }
+
+      .detail-row:last-child {
+        border-bottom: none;
+      }
+
+      .detail-name {
+        font-weight: 500;
+        color: #333;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .detail-size {
+        color: #666;
+      }
+
+      .detail-savings {
+        font-weight: 600;
+      }
+
+      .detail-savings.good {
+        color: #28a745;
+      }
+
+      .detail-savings.ok {
+        color: #ffc107;
+      }
+
+      .detail-savings.low {
+        color: #dc3545;
+      }
+
+      .detail-status {
+        text-align: right;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .status-badge.success {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-badge.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 13px;
+      }
+
+      .download-report-btn {
+        background: white;
+        color: #667eea;
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+
+      .download-report-btn:hover {
+        background: #f0f0f0;
+        color: #5568d3;
+        transform: none;
+      }
+
+      .format-comparison-note {
+        background: #e3f2fd;
+        border-left: 4px solid #1976d2;
+        padding: 12px;
+        margin: 15px 20px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #1565c0;
+      }
+
+      @media (max-width: 768px) {
+        .detail-row {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Web Image Optimizer</h1>
+      <p class="subtitle">
+        Optimize images for faster websites with detailed compression reports
+      </p>
+
+      <div class="section">
+        <div class="section-title">Input Folder</div>
+        <div class="folder-selector">
+          <button type="button" onclick="selectInputFolder()">
+            Select Input Folder
+          </button>
+        </div>
+        <div
+          id="inputFolderInfo"
+          class="folder-info"
+          style="display: none"
+        ></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Optimization Presets</div>
+        <div class="preset-buttons">
+          <button
+            type="button"
+            class="preset-btn"
+            onclick="applyPreset('thumbnail')"
+          >
+            📱 Thumbnail<br /><small>400px, 0.7q</small>
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            onclick="applyPreset('mobile')"
+          >
+            📱 Mobile<br /><small>768px, 0.75q</small>
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            onclick="applyPreset('tablet')"
+          >
+            💻 Tablet<br /><small>1024px, 0.8q</small>
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            onclick="applyPreset('desktop')"
+          >
+            🖥️ Desktop<br /><small>1920px, 0.8q</small>
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            onclick="applyPreset('hero')"
+          >
+            🎨 Hero<br /><small>2560px, 0.85q</small>
+          </button>
+          <button
+            type="button"
+            class="preset-btn active"
+            onclick="applyPreset('custom')"
+          >
+            ⚙️ Custom
+          </button>
+        </div>
+
+        <div class="options-grid">
+          <div class="option-group">
+            <label for="outputFormat">Output Format</label>
+            <select id="outputFormat">
+              <option value="image/webp">WebP (Best for web)</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/png">PNG</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label for="quality">Quality (0.1 - 1.0)</label>
+            <input
+              type="number"
+              id="quality"
+              min="0.1"
+              max="1"
+              step="0.05"
+              value="0.8"
+            />
+          </div>
+          <div class="option-group">
+            <label for="maxWidth">Max Width (px)</label>
+            <input
+              type="number"
+              id="maxWidth"
+              min="100"
+              max="10000"
+              step="100"
+              value="1920"
+            />
+          </div>
+          <div class="option-group">
+            <label for="maxHeight">Max Height (px)</label>
+            <input
+              type="number"
+              id="maxHeight"
+              min="100"
+              max="10000"
+              step="100"
+              value="1080"
+            />
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="stripMetadata" checked />
+          <label for="stripMetadata"
+            >Strip metadata (EXIF data) for smaller files</label
+          >
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="maintainStructure" checked />
+          <label for="maintainStructure"
+            >Maintain folder structure in output</label
+          >
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="generateAllFormats" />
+          <label for="generateAllFormats"
+            >Generate all formats (WebP, JPEG, PNG) for comparison</label
+          >
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Output Folder</div>
+        <div class="folder-selector">
+          <button type="button" onclick="selectOutputFolder()">
+            Select Output Folder
+          </button>
+        </div>
+        <div
+          id="outputFolderInfo"
+          class="folder-info"
+          style="display: none"
+        ></div>
+      </div>
+
+      <button
+        type="button"
+        class="process-btn"
+        id="processBtn"
+        onclick="processImages()"
+        disabled
+      >
+        Start Optimization
+      </button>
+
+      <div class="progress-section" id="progressSection">
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        <div class="progress-text" id="progressText">Processing...</div>
+      </div>
+
+      <div class="report" id="report">
+        <div class="report-header">
+          <div class="report-title">📊 Optimization Report</div>
+          <div class="report-actions">
+            <button class="download-report-btn" onclick="downloadReport('csv')">
+              Download CSV
+            </button>
+            <button
+              class="download-report-btn"
+              onclick="downloadReport('json')"
+            >
+              Download JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Images</div>
+            <div class="stat-value" id="totalImages">0</div>
+            <div class="stat-subtitle" id="successRate">100% success</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Original Size</div>
+            <div class="stat-value" id="originalSize">0 MB</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Optimized Size</div>
+            <div class="stat-value" id="optimizedSize">0 MB</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Savings</div>
+            <div class="stat-value savings-highlight" id="totalSavings">
+              0 MB
+            </div>
+            <div class="stat-subtitle savings-highlight" id="savingsPercent">
+              0% reduction
+            </div>
+          </div>
+        </div>
+
+        <div class="details-table">
+          <div class="details-header">
+            <span>Image Details</span>
+            <span style="font-size: 12px; font-weight: normal; color: #666">
+              Sorted by compression ratio
+            </span>
+          </div>
+          <div class="details-body" id="detailsBody"></div>
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Browser Compatibility:</strong> This tool uses the File
+        System Access API, which works best in Chrome, Edge, and Opera browsers.
+      </div>
+    </div>
+
+    <script>
+      let inputFolderHandle = null;
+      let outputFolderHandle = null;
+      let imageFiles = [];
+      let processedResults = [];
+
+      const presets = {
+        thumbnail: {
+          width: 400,
+          height: 400,
+          quality: 0.7,
+          format: "image/webp",
+        },
+        mobile: {
+          width: 768,
+          height: 1024,
+          quality: 0.75,
+          format: "image/webp",
+        },
+        tablet: {
+          width: 1024,
+          height: 1366,
+          quality: 0.8,
+          format: "image/webp",
+        },
+        desktop: {
+          width: 1920,
+          height: 1080,
+          quality: 0.8,
+          format: "image/webp",
+        },
+        hero: {
+          width: 2560,
+          height: 1440,
+          quality: 0.85,
+          format: "image/webp",
+        },
+      };
+
+      function applyPreset(presetName) {
+        document
+          .querySelectorAll(".preset-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        event.target.closest(".preset-btn").classList.add("active");
+
+        if (presetName !== "custom") {
+          const preset = presets[presetName];
+          document.getElementById("maxWidth").value = preset.width;
+          document.getElementById("maxHeight").value = preset.height;
+          document.getElementById("quality").value = preset.quality;
+          document.getElementById("outputFormat").value = preset.format;
+        }
+      }
+
+      async function selectInputFolder() {
+        try {
+          inputFolderHandle = await window.showDirectoryPicker({
+            mode: "read",
+          });
+
+          imageFiles = [];
+          await scanFolder(inputFolderHandle);
+
+          const totalSize = imageFiles.reduce(
+            (sum, img) => sum + img.file.size,
+            0
+          );
+
+          document.getElementById("inputFolderInfo").style.display = "block";
+          document.getElementById("inputFolderInfo").innerHTML = `
+                    <strong>${inputFolderHandle.name}</strong><br>
+                    Found ${
+                      imageFiles.length
+                    } image(s) | Total size: ${formatBytes(totalSize)}
+                `;
+
+          checkReadyToProcess();
+        } catch (err) {
+          if (err.name !== "AbortError") {
+            alert("Error selecting folder: " + err.message);
+          }
+        }
+      }
+
+      async function scanFolder(dirHandle, path = "") {
+        for await (const entry of dirHandle.values()) {
+          if (entry.kind === "file") {
+            const file = await entry.getFile();
+            if (file.type.startsWith("image/")) {
+              imageFiles.push({
+                file: file,
+                name: entry.name,
+                path: path + entry.name,
+              });
+            }
+          } else if (entry.kind === "directory") {
+            await scanFolder(entry, path + entry.name + "/");
+          }
+        }
+      }
+
+      async function selectOutputFolder() {
+        try {
+          outputFolderHandle = await window.showDirectoryPicker({
+            mode: "readwrite",
+          });
+
+          document.getElementById("outputFolderInfo").style.display = "block";
+          document.getElementById("outputFolderInfo").innerHTML = `
+                    <strong>${outputFolderHandle.name}</strong><br>
+                    Ready to save optimized images
+                `;
+
+          checkReadyToProcess();
+        } catch (err) {
+          if (err.name !== "AbortError") {
+            alert("Error selecting output folder: " + err.message);
+          }
+        }
+      }
+
+      function checkReadyToProcess() {
+        const btn = document.getElementById("processBtn");
+        btn.disabled = !(
+          inputFolderHandle &&
+          outputFolderHandle &&
+          imageFiles.length > 0
+        );
+      }
+
+      async function processImages() {
+        const quality = parseFloat(document.getElementById("quality").value);
+        const maxWidth = parseInt(document.getElementById("maxWidth").value);
+        const maxHeight = parseInt(document.getElementById("maxHeight").value);
+        const outputFormat = document.getElementById("outputFormat").value;
+        const stripMetadata = document.getElementById("stripMetadata").checked;
+        const maintainStructure =
+          document.getElementById("maintainStructure").checked;
+        const generateAllFormats =
+          document.getElementById("generateAllFormats").checked;
+
+        document.getElementById("processBtn").disabled = true;
+        document.getElementById("progressSection").style.display = "block";
+        document.getElementById("report").style.display = "none";
+
+        const progressBar = document.getElementById("progressBar");
+        const progressText = document.getElementById("progressText");
+
+        processedResults = [];
+        let totalOriginalSize = 0;
+        let totalOptimizedSize = 0;
+
+        // Determine which formats to process
+        const formats = generateAllFormats
+          ? ["image/webp", "image/jpeg", "image/png"]
+          : [outputFormat];
+
+        const totalOperations = imageFiles.length * formats.length;
+        let currentOperation = 0;
+
+        console.log(
+          `Starting batch processing: ${imageFiles.length} images, ${formats.length} format(s), ${totalOperations} total operations`
+        );
+        console.log(`Formats to process:`, formats);
+
+        for (let i = 0; i < imageFiles.length; i++) {
+          const imageData = imageFiles[i];
+          console.log(
+            `\n--- Processing image ${i + 1}/${imageFiles.length}: ${
+              imageData.name
+            } ---`
+          );
+
+          for (let formatIdx = 0; formatIdx < formats.length; formatIdx++) {
+            const currentFormat = formats[formatIdx];
+            const formatName = currentFormat.split("/")[1].toUpperCase();
+
+            currentOperation++;
+            const progress = Math.round(
+              (currentOperation / totalOperations) * 100
+            );
+
+            progressBar.style.width = progress + "%";
+            progressBar.textContent = progress + "%";
+
+            if (generateAllFormats) {
+              progressText.textContent = `Processing ${i + 1} of ${
+                imageFiles.length
+              }: ${imageData.name} (${formatName})`;
+            } else {
+              progressText.textContent = `Processing ${i + 1} of ${
+                imageFiles.length
+              }: ${imageData.name}`;
+            }
+
+            console.log(
+              `Processing format ${formatIdx + 1}/${
+                formats.length
+              }: ${formatName}`
+            );
+
+            try {
+              const startTime = performance.now();
+              console.log(`Compressing ${imageData.name} to ${formatName}...`);
+
+              const compressedBlob = await compressImage(imageData.file, {
+                quality: quality,
+                maxWidth: maxWidth,
+                maxHeight: maxHeight,
+                mimeType: currentFormat,
+                stripMetadata: stripMetadata,
+              });
+              const processingTime = Math.round(performance.now() - startTime);
+              console.log(
+                `Compression complete (${processingTime}ms): ${imageData.file.size} → ${compressedBlob.size} bytes`
+              );
+
+              const outputPath = maintainStructure
+                ? imageData.path
+                : imageData.name;
+              console.log(`Saving to: ${outputPath}`);
+              await saveCompressedImage(
+                outputPath,
+                compressedBlob,
+                currentFormat,
+                generateAllFormats
+              );
+
+              const originalSize = imageData.file.size;
+              const optimizedSize = compressedBlob.size;
+              const savings = originalSize - optimizedSize;
+              const savingsPercent = ((savings / originalSize) * 100).toFixed(
+                1
+              );
+
+              // Only count original size once per image
+              if (formatIdx === 0) {
+                totalOriginalSize += originalSize;
+              }
+              totalOptimizedSize += optimizedSize;
+
+              processedResults.push({
+                name: imageData.name,
+                path: imageData.path,
+                format: formatName,
+                originalSize: originalSize,
+                optimizedSize: optimizedSize,
+                savings: savings,
+                savingsPercent: parseFloat(savingsPercent),
+                processingTime: processingTime,
+                status: "success",
+              });
+              console.log(
+                `✓ Success: ${imageData.name} (${formatName}) - ${savingsPercent}% savings`
+              );
+            } catch (err) {
+              console.error(
+                `✗ Error processing ${imageData.name} (${formatName}):`,
+                err
+              );
+              console.error(`Error details:`, {
+                message: err.message,
+                stack: err.stack,
+                name: err.name,
+              });
+              processedResults.push({
+                name: imageData.name,
+                path: imageData.path,
+                format: formatName,
+                originalSize: imageData.file.size,
+                optimizedSize: 0,
+                savings: 0,
+                savingsPercent: 0,
+                processingTime: 0,
+                status: "error",
+                error: err.message,
+              });
+            }
+          }
+        }
+
+        console.log(`\n=== Batch processing complete ===`);
+        console.log(`Total results: ${processedResults.length}`);
+        console.log(
+          `Successful: ${
+            processedResults.filter((r) => r.status === "success").length
+          }`
+        );
+        console.log(
+          `Failed: ${
+            processedResults.filter((r) => r.status === "error").length
+          }`
+        );
+        console.log(`Displaying report...`);
+
+        displayReport(totalOriginalSize, totalOptimizedSize);
+        document.getElementById("processBtn").disabled = false;
+
+        console.log(`Report displayed successfully.`);
+      }
+
+      function compressImage(file, options) {
+        return new Promise((resolve, reject) => {
+          new Compressor(file, {
+            quality: options.quality,
+            maxWidth: options.maxWidth,
+            maxHeight: options.maxHeight,
+            mimeType: options.mimeType,
+            convertSize: 0,
+            checkOrientation: !options.stripMetadata,
+            success(result) {
+              resolve(result);
+            },
+            error(err) {
+              reject(err);
+            },
+          });
+        });
+      }
+
+      async function saveCompressedImage(
+        originalPath,
+        blob,
+        mimeType,
+        generateAllFormats
+      ) {
+        const extension = mimeType.split("/")[1];
+        const newName = originalPath.replace(/\.[^/.]+$/, `.${extension}`);
+
+        // If generating all formats, organize by format subfolder
+        let pathParts;
+        if (generateAllFormats) {
+          const formatFolder = extension;
+          pathParts = [formatFolder, ...newName.split("/")];
+        } else {
+          pathParts = newName.split("/");
+        }
+
+        console.log(
+          `Saving: ${newName} (format: ${extension}, generateAllFormats: ${generateAllFormats})`
+        );
+
+        let currentDirHandle = outputFolderHandle;
+
+        // Create directory structure
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          try {
+            currentDirHandle = await currentDirHandle.getDirectoryHandle(
+              pathParts[i],
+              { create: true }
+            );
+          } catch (err) {
+            console.error(`Failed to create directory: ${pathParts[i]}`, err);
+            throw new Error(
+              `Failed to create directory: ${pathParts[i]} - ${err.message}`
+            );
+          }
+        }
+
+        // Save file with proper error handling
+        try {
+          const fileName = pathParts[pathParts.length - 1];
+          console.log(`Creating file: ${fileName}`);
+
+          const fileHandle = await currentDirHandle.getFileHandle(fileName, {
+            create: true,
+          });
+          const writable = await fileHandle.createWritable();
+
+          try {
+            await writable.write(blob);
+            await writable.close();
+            console.log(`Successfully saved: ${fileName}`);
+          } catch (writeErr) {
+            // If write fails, try to close the writable to clean up
+            try {
+              await writable.close();
+            } catch (closeErr) {
+              console.error(
+                `Failed to close writable after write error`,
+                closeErr
+              );
+            }
+            throw writeErr;
+          }
+        } catch (err) {
+          console.error(
+            `Failed to save file: ${pathParts[pathParts.length - 1]}`,
+            err
+          );
+          throw new Error(
+            `Failed to save file: ${pathParts[pathParts.length - 1]} - ${
+              err.message
+            }`
+          );
+        }
+      }
+
+      function displayReport(totalOriginalSize, totalOptimizedSize) {
+        const report = document.getElementById("report");
+        report.style.display = "block";
+
+        const succeeded = processedResults.filter(
+          (r) => r.status === "success"
+        ).length;
+        const failed = processedResults.filter(
+          (r) => r.status === "error"
+        ).length;
+        const totalSavings = totalOriginalSize - totalOptimizedSize;
+        const savingsPercent = (
+          (totalSavings / totalOriginalSize) *
+          100
+        ).toFixed(1);
+
+        document.getElementById("totalImages").textContent =
+          processedResults.length;
+        document.getElementById(
+          "successRate"
+        ).textContent = `${succeeded} successful, ${failed} failed`;
+        document.getElementById("originalSize").textContent =
+          formatBytes(totalOriginalSize);
+        document.getElementById("optimizedSize").textContent =
+          formatBytes(totalOptimizedSize);
+        document.getElementById("totalSavings").textContent =
+          formatBytes(totalSavings);
+        document.getElementById(
+          "savingsPercent"
+        ).textContent = `${savingsPercent}% reduction`;
+
+        // Sort by savings percentage (highest first)
+        processedResults.sort((a, b) => b.savingsPercent - a.savingsPercent);
+
+        const detailsBody = document.getElementById("detailsBody");
+        detailsBody.innerHTML = "";
+
+        // Check if we're comparing multiple formats
+        const uniqueFormats = [
+          ...new Set(processedResults.map((r) => r.format)),
+        ];
+        const isComparingFormats =
+          uniqueFormats.length > 1 && uniqueFormats[0] !== undefined;
+
+        if (isComparingFormats) {
+          const note = document.createElement("div");
+          note.className = "format-comparison-note";
+          note.innerHTML = `<strong>📊 Format Comparison Mode:</strong> Each image has been optimized in multiple formats. Results are sorted by compression ratio to help you identify the best format for each image.`;
+          detailsBody.appendChild(note);
+        }
+
+        processedResults.forEach((result) => {
+          const row = document.createElement("div");
+          row.className = "detail-row";
+
+          let savingsClass = "low";
+          if (result.savingsPercent > 50) savingsClass = "good";
+          else if (result.savingsPercent > 25) savingsClass = "ok";
+
+          const formatBadge = result.format
+            ? `<span class="detail-format ${result.format.toLowerCase()}">${
+                result.format
+              }</span>`
+            : "";
+
+          row.innerHTML = `
+                    <div class="detail-name" title="${result.path}">${
+            result.name
+          }</div>
+                    <div>${formatBadge}</div>
+                    <div class="detail-size">
+                        ${formatBytes(result.originalSize)} → ${formatBytes(
+            result.optimizedSize
+          )}
+                    </div>
+                    <div class="detail-savings ${savingsClass}">
+                        -${formatBytes(result.savings)} (${
+            result.savingsPercent
+          }%)
+                    </div>
+                    <div class="detail-status">
+                        <span class="status-badge ${result.status}">
+                            ${
+                              result.status === "success"
+                                ? "✓ Optimized"
+                                : "✗ Failed"
+                            }
+                        </span>
+                    </div>
+                `;
+
+          detailsBody.appendChild(row);
+        });
+
+        // Scroll to report
+        report.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function downloadReport(format) {
+        if (format === "csv") {
+          downloadCSV();
+        } else if (format === "json") {
+          downloadJSON();
+        }
+      }
+
+      function downloadCSV() {
+        const headers = [
+          "Filename",
+          "Format",
+          "Original Size (bytes)",
+          "Optimized Size (bytes)",
+          "Savings (bytes)",
+          "Savings (%)",
+          "Status",
+        ];
+        const rows = processedResults.map((r) => [
+          r.name,
+          r.format || "N/A",
+          r.originalSize,
+          r.optimizedSize,
+          r.savings,
+          r.savingsPercent,
+          r.status,
+        ]);
+
+        let csv = headers.join(",") + "\n";
+        rows.forEach((row) => {
+          csv += row.map((cell) => `"${cell}"`).join(",") + "\n";
+        });
+
+        downloadFile("image-optimization-report.csv", csv, "text/csv");
+      }
+
+      function downloadJSON() {
+        const report = {
+          timestamp: new Date().toISOString(),
+          summary: {
+            totalImages: processedResults.length,
+            succeeded: processedResults.filter((r) => r.status === "success")
+              .length,
+            failed: processedResults.filter((r) => r.status === "error").length,
+            totalOriginalSize: processedResults.reduce(
+              (sum, r) => sum + r.originalSize,
+              0
+            ),
+            totalOptimizedSize: processedResults.reduce(
+              (sum, r) => sum + r.optimizedSize,
+              0
+            ),
+            totalSavings: processedResults.reduce(
+              (sum, r) => sum + r.savings,
+              0
+            ),
+          },
+          images: processedResults,
+        };
+
+        downloadFile(
+          "image-optimization-report.json",
+          JSON.stringify(report, null, 2),
+          "application/json"
+        );
+      }
+
+      function downloadFile(filename, content, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function formatBytes(bytes) {
+        if (bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      // Check browser compatibility
+      if (!("showDirectoryPicker" in window)) {
+        document.body.innerHTML = `
+                <div class="container">
+                    <h1>❌ Browser Not Supported</h1>
+                    <p>This application requires the File System Access API, which is only available in:</p>
+                    <ul style="margin: 20px; line-height: 1.8;">
+                        <li>Google Chrome 86+</li>
+                        <li>Microsoft Edge 86+</li>
+                        <li>Opera 72+</li>
+                    </ul>
+                    <p>Please use one of these browsers to access this tool.</p>
+                </div>
+            `;
+      }
+    </script>
+  </body>
+</html>
